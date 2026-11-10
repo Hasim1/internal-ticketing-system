@@ -1,0 +1,92 @@
+# Docker Compose for the Internal Ticketing & Support Management System.
+#
+# Brings up three services:
+#   - db:       PostgreSQL 16 with a named volume + healthcheck.
+#   - backend:  FastAPI app (built from ./backend), waits for db to be healthy.
+#   - frontend: React/Vite app served by nginx (built from ./frontend).
+#
+# Configuration is sourced from a root `.env` file (copy `.env.example` -> `.env`).
+# All variables fall back to sane defaults so `docker compose up` works out of the box.
+#
+# Usage:
+#   cp .env.example .env      # optional: customise secrets
+#   docker compose up --build
+#
+# Then: API on http://localhost:8000 (docs at /docs), UI on http://localhost:5173.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ticketing-db
+    restart: unless-stopped
+    # Read POSTGRES_* from the root .env (with defaults below as a safety net).
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-ticketing}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      # Expose Postgres on the host for inspection / local tooling.
+      - "5432:5432"
+    healthcheck:
+      # The backend's depends_on waits until this passes.
+      test:
+        ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-ticketing}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - ticketing-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ticketing-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Inside the compose network the DB host is the service name `db`.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-ticketing}
+      SECRET_KEY: ${SECRET_KEY:-change-me}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-["http://localhost:5173","http://localhost:3000"]}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    networks:
+      - ticketing-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Baked into the static bundle at build time (Vite inlines import.meta.env.*).
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api}
+    container_name: ticketing-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      # Host 5173 -> nginx :80 in the container.
+      - "5173:80"
+    networks:
+      - ticketing-net
+
+# Named volume so Postgres data survives `docker compose down` (use `down -v` to wipe).
+volumes:
+  pgdata:
+    driver: local
+
+# Dedicated bridge network so services resolve each other by name.
+networks:
+  ticketing-net:
+    driver: bridge

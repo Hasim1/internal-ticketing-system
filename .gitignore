@@ -1,0 +1,61 @@
+# ---------------------------------------------------------------------------
+# .gitignore — Internal Ticketing & Support Management System
+# ---------------------------------------------------------------------------
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+*.local
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.Python
+*.egg-info/
+.eggs/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.db
+*.sqlite3
+
+# --- Node / Frontend ---
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Docker ---
+# (compose files are tracked; ignore local override files)
+docker-compose.override.yml
+
+# --- OS ---
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# --- IDE / Editors ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/

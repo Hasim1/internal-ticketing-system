@@ -1,0 +1,1 @@
+# No migration scripts yet. Tables are created with SQLAlchemy create_all.
