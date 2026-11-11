@@ -188,6 +188,8 @@ export function ToastProvider({ children }: ToastProviderProps) {
 /**
  * Access the toast helpers. Throws if used outside a {@link ToastProvider}.
  */
+// The hook is exported next to its provider on purpose; this only affects dev-time fast refresh.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);
   if (ctx === null) {

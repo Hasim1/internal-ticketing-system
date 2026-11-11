@@ -195,6 +195,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
  * Access the auth context. Throws if used outside an {@link AuthProvider} so
  * the misconfiguration surfaces immediately during development.
  */
+// The hook is exported next to its provider on purpose; this only affects dev-time fast refresh.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (ctx === null) {

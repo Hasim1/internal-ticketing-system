@@ -52,15 +52,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          # NOTE: npm caching is intentionally omitted because no package-lock.json
-          # is committed yet. Once you run `npm install` locally and commit the
-          # generated frontend/package-lock.json, you can add:
+          # NOTE: frontend/package-lock.json is committed, so dependencies are
+          # installed with `npm ci`. npm caching is not enabled; to enable it, add:
           #   cache: npm
           #   cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        # Prefer a reproducible install from the lockfile; fall back to a plain
-        # install if no lockfile is committed yet.
+        # Reproducible install from the committed lockfile; falls back to a plain
+        # install only if the lockfile is ever removed.
         run: |
           if [ -f package-lock.json ]; then
             npm ci
