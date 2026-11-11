@@ -1,7 +1,9 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 import { clsx } from 'clsx';
 
-export interface CardProps extends HTMLAttributes<HTMLDivElement> {
+// `title` is omitted from the native div attributes (where it is a string
+// tooltip) because this component defines its own `title` heading prop.
+export interface CardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   /** Optional heading rendered in the card header. */
   title?: ReactNode;
   /** Optional sub-heading rendered under the title. */
